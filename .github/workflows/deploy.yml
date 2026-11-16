@@ -1,0 +1,46 @@
+# GitHub Pages 배포: main에 푸시하거나 Actions 탭에서 [Run workflow]로 실행하면
+# npm ci → npm run build로 dist/를 만들어 배포
+# 사전 설정: 저장소 Settings → Pages → Build and deployment → Source = "GitHub Actions"
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 기본은 읽기 권한만. Pages 배포 권한은 deploy 작업에만 부여
+permissions:
+  contents: read
+
+# 배포는 한 번에 하나씩. 진행 중인 배포는 취소하지 않음
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
