@@ -1,0 +1,118 @@
+# PROBA 관리자 콘솔 · 조직 관리 프로토타입 (React + TypeScript)
+
+PROBA **관리자 콘솔**(서비스 관리자)과 **조직 관리**(조직 관리자) 화면 기획 프로토타입을 React + TypeScript로 옮긴 프로젝트입니다.
+
+- 기준 원본: [`docs/관리자콘솔_기획/화면시안/PROBA_관리자콘솔_프로토타입.html`](docs/관리자콘솔_기획/화면시안/PROBA_관리자콘솔_프로토타입.html) (단일 HTML, v0.14)
+- 원본과 화면·문구·동작이 같도록 1:1로 다시 작성했으며, 내용을 더하거나 빼지 않았습니다.
+- 모든 조직·사용자·사용량은 **가상의 목업 데이터**입니다. 기준 시각은 2026-11-11 10:45(KST)입니다.
+
+## 실행
+
+Node.js 20.19 이상 또는 22.12 이상이 필요합니다.
+
+```bash
+npm install
+npm run dev        # 개발 서버 (기본 http://localhost:5173)
+npm run build      # 타입 검사 + 배포용 빌드 → dist/
+npm run preview    # 빌드 결과 미리 보기
+npm run typecheck  # 타입 검사만
+```
+
+`dist/`는 웹 서버에 올려서 열어야 합니다. `file://`로 직접 열면 브라우저가 모듈 스크립트를 막아 실행되지 않습니다. 로컬에서는 `npm run preview`로 확인하세요.
+
+## 사용 방법
+
+- 처음 열면 **서비스 관리자(이서연)** 로 로그인된 워크스페이스가 나옵니다.
+- 오른쪽 위 **사람 아이콘(사용자 메뉴)** 에서 권한에 따라 [관리자 콘솔]·[조직 관리]로 이동합니다.
+- 왼쪽 아래 **[프로토타입 안내]** 패널에서 로그인 사용자 바꾸기, 화면 바로가기, 데이터 초기화를 할 수 있습니다.
+- 데이터는 브라우저 메모리에만 있어 새로 고침하면 처음 상태로 돌아갑니다.
+- 주소에 `?capture`를 붙이면(예: `http://localhost:5173/?capture#/admin/users`) 프로토타입 안내 패널이 숨겨집니다. 화면 캡처용입니다.
+
+### 로그인 사용자
+
+| 키 | 사용자 | 역할 |
+|---|---|---|
+| `sa` | 이서연 | 서비스 관리자 (플랫폼 멤버십) |
+| `oa` | 박지훈 | COMES(Enterprise) 조직 관리자 |
+| `oaTeam` | 김도윤 | 온마켓(Team) 조직 관리자 |
+| `multi` | 류지안 | 여러 조직 소속 (베리샵 조직 관리자 · 온마켓 QA 엔지니어) |
+| `trial` | 송다은 | 바른병원(Trial 만료로 정지) 조직 관리자 |
+| `qa` | 최현우 | COMES QA 엔지니어 (콘솔 권한 없음) |
+
+### 화면
+
+| 경로 | 화면 | 화면 ID |
+|---|---|---|
+| `#/workspace` | 워크스페이스 (진입점) | |
+| `#/admin/organizations` | 관리자 콘솔 · 조직 관리 | SA-10 ~ SA-16 |
+| `#/admin/organizations/ORG-1` | 조직 상세 | SA-12 |
+| `#/admin/users` | 사용자 관리 | SA-20 ~ SA-23 |
+| `#/admin/models` | AI 모델 | SA-30 ~ SA-36 |
+| `#/admin/usage` | 사용량·사용 금액 | SA-40 · SA-41 |
+| `#/admin/audit-logs` | 감사 로그 | SA-50 |
+| `#/org/info` | 조직 관리 · 조직 정보 (플랜 변경·정보 수정) | OA-60 ~ OA-62 |
+| `#/org/members` | 멤버 관리 (멤버 초대) | OA-10 · OA-11 |
+| `#/org/permissions` | 권한 관리 | OA-20 |
+| `#/org/activity` | 활동 로그 (Enterprise) | OA-30 |
+| `#/org/models` | AI 모델 | OA-40 |
+| `#/org/usage` | 사용량·사용 금액 | OA-50 |
+
+권한이 없는 화면에 주소로 들어가면 원본과 같이 403 안내 화면이 나옵니다.
+
+### 캡처·시연용 API (`window.PROTO`)
+
+브라우저 개발자 도구 콘솔에서 원본과 같은 방식으로 특정 상태를 바로 열 수 있습니다.
+
+```js
+PROTO.persona('oa');                                // 로그인 사용자 바꾸기
+PROTO.go('/org/members');                           // 화면 이동
+PROTO.ui('orgs', { status: 'SUSPENDED' });          // 목록 필터·탭 등 화면 상태 바꾸기
+PROTO.draftPerm([['lqa.plan', 'VIEWER', 'BLOCK']]); // 저장하지 않은 권한 변경 만들기
+PROTO.open('suspend', 'ORG-2');                     // 모달·드로어·메뉴 열기
+```
+
+`PROTO.open`에 쓸 수 있는 이름: `userMenu` `orgCreate` `orgMenu` `plan` `planPick` `orgEdit` `suspend` `delete` `assign` `userDrawer` `unlock` `disable` `saAdd` `userMenuOf` `saDeactivate` `modelDrawer` `modelEdit` `priceChange` `promoAdd` `deactivate` `usageOrg` `orgModelOff` `auditDrawer` `invite` `roleChange` `memberMenu` `memberDeact` `memberRemove` `permSave` `profile`
+
+## 프로젝트 구조
+
+```
+index.html               원본과 같은 <head>(제목·설명·글꼴)와 4개 영역
+                         (#app · #overlay-root · #toast-root · #proto-panel)
+src/
+  main.tsx               시작점: 루트 연결, 문서 이벤트 등록, 첫 화면 그리기
+  types.ts               도메인 타입 (조직·계정·멤버십·AI 모델·감사 로그·화면 상태)
+  styles/prototype.css   원본 CSS (원문 그대로)
+  data/                  목업 데이터 (원본 줄을 그대로 옮기고 타입만 추가)
+  core/                  상태(ST) · 렌더 런타임 · 라우터 · 이벤트 · 입력 요소 · 공통 UI
+                         · 모달/드로어 · 행 메뉴 · 토스트 · 툴팁
+  pages/admin/           관리자 콘솔 화면 (조직 · 조직 상세 · 사용자 · AI 모델 · 사용량 · 감사 로그)
+  pages/org/             조직 관리 화면 (조직 정보 · 멤버 · 권한 · AI 모델 · 사용량 · 활동 로그)
+  pages/common/          워크스페이스 · 사용자 메뉴 · 내 정보 · 403
+  app/                   화면 셸, 화면 이동, 프로토타입 안내 패널, window.PROTO
+```
+
+## 구현 방식과 수정할 때 지킬 점
+
+원본의 화면 결과뿐 아니라 다시 그리는 시점, 포커스·스크롤 위치, 한글 입력까지 같게 하려고 원본 구조를 그대로 따랐습니다. 화면을 고칠 때는 아래 규칙을 지켜 주세요.
+
+- **상태**: 원본처럼 전역 상태 `ST`(`src/core/state.ts`)를 직접 바꾼 뒤 `render()`(화면)나 `refreshOverlay()`(모달·드로어)를 호출합니다. 화면 함수는 JSX를 돌려주는 일반 함수이고, React 상태·훅은 쓰지 않습니다.
+- **렌더링**: 원본의 4개 영역마다 React 루트를 하나씩 두고, 원본과 같은 시점에 `flushSync`로 바로 그립니다(`src/core/runtime.tsx`).
+- **동작 연결**: 원본의 `data-act` · `data-in` · `data-ch` 대신 `onClick={act('이름', 데이터)}`, `onValue={inp('이름')}`, `onChange={ch('이름')}`을 씁니다. 동작 내용은 원본과 같은 이름으로 `ACT` · `IN` · `CH`에 등록되어 있습니다.
+- **입력 요소**: `<input>` · `<textarea>` · `<select>`를 직접 쓰지 말고 `Input` · `Textarea` · `Check` · `Select`(또는 `sel()`)를 쓰세요. 원본의 값 맞춤 규칙과 한글 조합 처리(조합 중에는 다시 그리지 않음)가 들어 있습니다.
+- **문구**: 원본에서 한 덩어리였던 문구는 `` {`${used} / ${lim}`} ``처럼 한 문자열로 쓰세요. `{used} / {lim}`처럼 나누면 DOM 텍스트가 여러 조각으로 나뉘어 글자 위치가 미세하게 달라집니다.
+- **목록 key**: 원본은 요소를 위치 순서로 고쳐 그렸으므로 key는 순번(index)을 씁니다. 권한 관리 화면은 경고·저장 바가 생기고 없어질 때의 동작까지 맞추려고 위치 순서 목록과 `requestSettlePass()`를 씁니다.
+
+## 원본과 다른 점
+
+1. **원본의 버그는 따라 하지 않았습니다.** 권한 관리에 저장하지 않은 변경이 있을 때 다른 화면으로 가려 하면 [나가기] 확인 창이 뜹니다. 이 창이 열린 채로 [프로토타입 안내] 패널에서 로그인 사용자를 바꾸고 [나가기]를 누르면, 원본은 `#undefined` 주소의 워크스페이스로 이동합니다. 원본이 눌렀던 링크의 속성을 화면을 다시 그린 뒤에 읽기 때문입니다. 이 프로젝트는 처음 누른 화면으로 이동합니다.
+2. **HTML을 직접 입력한 이름**: 조직명·사용자명 등에 HTML 태그나 문자 참조(`<b>`, `&copy;` 등)를 넣으면, 원본은 일부 제목·확인 문구에서 이를 HTML로 해석해 그렸습니다. 이 프로젝트는 입력한 글자 그대로 보여 줍니다. 목업 데이터와 일반적인 입력에서는 차이가 없습니다.
+
+## 검증 (2026-11-16)
+
+원본 HTML과 이 프로젝트의 빌드를 Chrome에 나란히 띄우고 같은 조작을 한 뒤, DOM(속성 포함) · 화면 문구 · 포커스·스크롤 · 토스트 · 스크린샷(픽셀 단위)을 비교했습니다.
+
+| 항목 | 결과 |
+|---|---|
+| 고정 시나리오 (로그인 사용자 6명 × 전체 경로, 탭·필터, 모달·드로어, 폼 제출과 감사·활동 로그 결과) | 627개 모두 동일 |
+| 무작위 조작 비교 | 143/144 동일 (7,669단계, 다른 1건은 위 '원본과 다른 점' 1번) |
+| 한글 IME 조합 입력 | 12개 모두 동일 |
