@@ -1,7 +1,7 @@
 /* ---------- OA-50 사용량·사용 금액 (조직) ---------- */
 import type { ReactNode } from 'react';
 import { MONTHS } from '../../data';
-import { CH, CUR_ORG, ST, ch, fmt, fmt1, notice, orgById, pageHead, planBadge, render, seatText, seatsUsed, sel, usd, type Page, type SelOpt } from '../../core';
+import { CH, CUR_ORG, ST, ch, fmt, fmt1, notice, orgById, pageHead, render, sel, usd, type Page, type SelOpt } from '../../core';
 import { DOM_COLORS, dailySeries, modelShareTable, usageOf, type UsageNumKey } from '../admin/usage';
 
 export function pageOrgUsage(): Page {
@@ -20,7 +20,7 @@ export function pageOrgUsage(): Page {
   const body = (
     <>
       {pageHead('chart', '사용량·사용 금액', '월간 사용량과 AI 모델 사용 금액')}
-      <div className="filterbar">{sel('m', MONTHS.map((m): SelOpt => [m.key, m.label]), f.month, { onChange: ch('ouMonth'), 'aria-label': '기준 월' })}<span className="faint" style={{ fontSize: '12px' }}>{mo.note}</span><span className="ml-auto faint" style={{ fontSize: '12px' }}>{planBadge(o.plan)}{` · 좌석 ${seatsUsed(o.id)}명 사용 (${seatText(o) === '제한 없음' ? '제한 없음' : '한도 ' + seatText(o)})`}</span></div>
+      <div className="filterbar">{sel('m', MONTHS.map((m): SelOpt => [m.key, m.label]), f.month, { onChange: ch('ouMonth'), 'aria-label': '기준 월' })}<span className="faint" style={{ fontSize: '12px' }}>{mo.note}</span></div>{/* v0.17: 플랜 배지·좌석 사용 수 삭제(플랜·좌석은 조직 정보·멤버 관리 화면에서 확인) */}
       <div className="grid g5">
         {stat('lqa', 'AI 품질', <>{fmt(us.lqaRuns)}<small>회</small></>, `채점 ${fmt(us.lqaCases)}건`, 'lqaRuns')}
         {stat('fqa', '기능 QA', <>{fmt(us.fqaRuns)}<small>회</small></>, `러너 ${fmt1(us.runnerH)}h`, 'fqaRuns')}

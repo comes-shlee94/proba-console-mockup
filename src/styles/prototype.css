@@ -504,5 +504,8 @@ ul.rel-list ul.rel-list, .notice ul.rel-list ul.rel-list { margin: 0; padding-le
 /* v0.4: 감사 로그 직접 입력(기간) */
 .date-range { display: inline-flex; align-items: center; gap: 6px; color: var(--subtle); }
 .date-range .input { width: 148px; height: 32px; padding: 0 8px; font-size: 13px; font-variant-numeric: tabular-nums; }
+/* v0.17: 날짜·시각 입력은 입력란 어디를 눌러도 데이트 피커가 열림(form.tsx openPicker) → 손가락 커서 */
+.input[type="date"], .input[type="datetime-local"], .input[type="time"],
+.input[type="date"]::-webkit-calendar-picker-indicator, .input[type="datetime-local"]::-webkit-calendar-picker-indicator, .input[type="time"]::-webkit-calendar-picker-indicator { cursor: pointer; }
 .org-chip .ic { width: 12px; height: 12px; vertical-align: -2px; margin-right: 3px; }
 

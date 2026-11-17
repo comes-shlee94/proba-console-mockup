@@ -20,6 +20,13 @@ function useAutofocusAttr(ref: RefObject<HTMLElement | null>, autoFocus: boolean
   });
 }
 
+/** v0.17: 날짜·시각 입력은 입력란 어디를 눌러도 데이트 피커가 열림(브라우저 기본은 오른쪽 달력·시계 아이콘을 눌러야 열림) */
+const PICKER_TYPES = new Set(['date', 'datetime-local', 'time', 'month', 'week']);
+export function openPicker(el: HTMLInputElement) {
+  if (!PICKER_TYPES.has(el.type) || el.disabled || el.readOnly) return;
+  try { el.showPicker(); } catch (err) { /* showPicker를 지원하지 않는 브라우저 등: 아이콘을 눌러 여는 기본 동작 그대로 */ }
+}
+
 export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'defaultValue' | 'onInput' | 'onChange' | 'autoFocus' | 'checked' | 'defaultChecked'> {
   /** 원본 템플릿의 value 속성 값 (없으면 빈 값으로 맞춤) */
   value?: string | number | null;
@@ -60,6 +67,7 @@ export function Input({ value, onValue, onEnter, onCommit, autoFocus, onKeyDown,
       onInput={(e) => { if ((e.nativeEvent as InputEvent).isComposing || isComposing()) return; onValue?.(e.currentTarget.value, e.currentTarget, e.nativeEvent); }}
       onCompositionEnd={(e) => { setComposing(false); onValue?.(e.currentTarget.value, e.currentTarget, e.nativeEvent); }}
       onKeyDown={(e) => { onKeyDown?.(e); if (e.key === 'Enter' && onEnter) onEnter(e.currentTarget, e.nativeEvent); }}
+      onClick={(e) => { rest.onClick?.(e); if (!e.defaultPrevented) openPicker(e.currentTarget); }}
     />
   );
 }
