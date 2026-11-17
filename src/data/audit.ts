@@ -1,6 +1,7 @@
 import type { Actor, ActorRole, AuditCat, AuditSeed } from '../types';
 
 /* ---------------- 감사 로그 ---------------- */
+// 분류 '내보내기'(EXPORT): v0.15부터 관리 콘솔의 내보내기(사용량 엑셀·감사 로그)는 없음 — 워크스페이스 '결과 내보내기'(report.export) 기록용으로만 남김
 export const AUDIT_CATS: Record<AuditCat, string> = { AUTH: '인증', ORG: '조직', MEMBER: '멤버', PERM: '권한', ACCOUNT: '계정', MODEL: 'AI 모델', EXEC: '실행', DATA: '데이터', EXPORT: '내보내기', SUPPORT: '지원 접속', SETTING: '설정' };
 // 접속 정보(IP · User-Agent): 사내는 10.x, 외부는 문서용 예시 대역(203.0.113.x). 시스템 자동 처리 건은 접속 정보 없음
 export const A = (at: string, orgId: string | null, actor: Actor, cat: AuditCat, action: string, target: string, extra: Partial<AuditSeed> = {}): AuditSeed => ({
@@ -36,7 +37,6 @@ export const auditSeed: AuditSeed[] = [
   A('2026-11-09 16:48:20', null, actLee, 'MODEL', '모델 비활성화', 'gpt-4o', { changes: [['활성', '예', '아니오'], ['대체 모델', '-', 'claude-haiku-5-5 (평가 계획 3건 전환)']] }),
   A('2026-11-09 10:05:40', 'ORG-1', actPark, 'MODEL', '조직 모델 사용 설정', 'gemini-3.1-pro-preview', { changes: [['사용', '아니오', '예']] }),
   A('2026-11-08 14:22:05', 'ORG-1', actPark, 'PERM', '메뉴 권한 변경', 'Viewer · 데이터셋 외 1건', { changes: [['Viewer · 데이터셋', '조회', '차단'], ['Viewer · 리포트·알림', '허용', '조회']] }),
-  A('2026-11-07 17:20:42', null, actLee, 'EXPORT', '사용량 내보내기', '2026년 10월 · 전체 조직', { changes: [['파일', '-', 'proba_usage_2026-10.xlsx (12개 조직)']] }),
   A('2026-11-06 15:03:18', 'ORG-4', P('한소희', 'sohee.han@garambank.example', 'ORG_ADMIN'), 'MEMBER', '역할 변경', '류시우(siwoo.ryu@garambank.example)', { changes: [['역할', 'Viewer', 'QA 엔지니어']] }),
   A('2026-11-06 09:12:55', 'ORG-12', P('문태호', 'taeho.moon@sodam.example', 'ORG_ADMIN'), 'ORG', '플랜 변경', '소담푸드', { changes: [['플랜', 'Trial', 'Team'], ['Trial 만료일', '2026-11-08', '-(정식 플랜 전환)']], reason: '정식 계약 체결' }),
   A('2026-11-05 10:00:21', 'ORG-9', actLee, 'ORG', '삭제 요청', '누리교육', { changes: [['조직 상태', '운영', '삭제 예정'], ['영구 삭제 예정일', '-', '2026-12-05']], reason: '고객 요청(서비스 해지)' }),

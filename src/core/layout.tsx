@@ -16,7 +16,7 @@ export const ADMIN_NAV: NavDef[] = [
   ['/admin/organizations', '조직 관리', 'building', '서비스에 등록된 전체 조직의 생성·정지·삭제와 조직 관리자 지정'],
   ['/admin/users', '사용자 관리', 'users', '전체 계정의 상태(활성·잠김·비활성)와 소속 조직·서비스 관리자 관리'],
   ['/admin/models', 'AI 모델', 'cpu', '평가에 사용할 LLM 모델 등록과 단가(Short·Long 구간, 캐시) 관리'],
-  ['/admin/usage', '사용량·사용 금액', 'chart', '조직·도메인별 월간 사용량과 AI 모델 사용 금액 조회·내보내기'],
+  ['/admin/usage', '사용량·사용 금액', 'chart', '조직·도메인별 월간 사용량과 AI 모델 사용 금액 조회'],
   ['/admin/audit-logs', '감사 로그', 'clipboard', '로그인·권한·설정 변경 등 주요 행위 이력 조회 (변경 불가 보관)'],
 ];
 export const ORG_NAV: NavDef[] = [

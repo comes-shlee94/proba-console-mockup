@@ -2,10 +2,10 @@
    사용 금액: 조직·월·모델 단위(요청별 토큰 × 요청 시각의 단가, 기간 할인·Short/Long·캐시 단가 반영) → 센트 반올림
    조직 합계·전체 합계는 반올림된 모델별 금액의 합 */
 import { Fragment, type ReactNode } from 'react';
-import type { MonthDef, Org, PlanKey, UsageRec } from '../../types';
+import type { MonthDef, Org, UsageRec } from '../../types';
 import { EXTRA_NOV, MONTHS, MONTH_FACTOR, NOW_KEY, ORG_STATUS, PLANS, USAGE_BASE } from '../../data';
 import {
-  ACT, CH, ST, act, addAudit, badge, ch, closeOverlay, confirmModal, fmt, fmt1, go, icon, notice, openOverlay, orgById, pageHead, r2, render, sel, toast, usd,
+  ACT, CH, ST, act, badge, ch, closeOverlay, fmt, fmt1, go, icon, notice, openOverlay, orgById, pageHead, r2, render, sel, usd,
   type Page, type SelOpt,
 } from '../../core';
 import { modelByName } from './models';
@@ -57,11 +57,10 @@ export function pageUsage(): Page {
   const trs = sorted.map(({ o, us }, i) => <tr key={i} className="click" onClick={act('usgOrg', { id: o.id })}><td><div className="two"><span className="p">{o.name}</span><span className="s">{`${PLANS[o.plan].label}${o.status !== 'ACTIVE' ? ' · ' + ORG_STATUS[o.status][0] : ''}`}</span></div></td><td className="r num">{fmt(us.lqaRuns)}</td><td className="r num">{fmt(us.lqaCases)}</td><td className="r num">{fmt(us.fqaRuns)}</td><td className="r num">{fmt1(us.runnerH)}</td><td className="r num">{fmt(us.loadRuns)}</td><td className="r num">{fmt1(us.workerH)}</td><td className="r num">{fmt(us.appRuns)}</td><td className="r num">{fmt1(us.deviceH)}</td><td className="r num"><b>{usd(us.billUsd)}</b></td><td className="c faint">{icon('right', 'sm')}</td></tr>);
   const body = (
     <>
-      {pageHead('chart', '사용량·사용 금액', '조직·도메인별 월간 사용량과 AI 모델 사용 금액 조회 · 엑셀 내보내기')}
+      {pageHead('chart', '사용량·사용 금액', '조직·도메인별 월간 사용량과 AI 모델 사용 금액 조회')}
       <div className="filterbar">{sel('m', MONTHS.map((m): SelOpt => [m.key, m.label]), u.month, { onChange: ch('usgMonth'), 'aria-label': '기준 월' })}
         <span className="faint" style={{ fontSize: '12px' }}>{mo.note}</span>
-        <div className="vsep"></div>{sel('o', [['ALL', '전체 조직'], ...ST.orgs.map((o): SelOpt => [o.id, o.name])], u.org, { onChange: ch('usgOrgF'), 'aria-label': '조직' })}{sel('p', [['ALL', '전체 플랜'], ['TRIAL', 'Trial'], ['TEAM', 'Team'], ['ENTERPRISE', 'Enterprise']], u.plan, { onChange: ch('usgPlan'), 'aria-label': '플랜' })}
-        <span className="ml-auto"></span><button className="btn btn-secondary" onClick={act('usgExport')}>{icon('download', 'sm')}엑셀 다운로드</button></div>
+        <div className="vsep"></div>{sel('o', [['ALL', '전체 조직'], ...ST.orgs.map((o): SelOpt => [o.id, o.name])], u.org, { onChange: ch('usgOrgF'), 'aria-label': '조직' })}{sel('p', [['ALL', '전체 플랜'], ['TRIAL', 'Trial'], ['TEAM', 'Team'], ['ENTERPRISE', 'Enterprise']], u.plan, { onChange: ch('usgPlan'), 'aria-label': '플랜' })}</div>
       <div className="grid g5">
         {kpi('lqa', 'AI 품질', fmt(sum('lqaRuns')), '회', `채점 ${fmt(sum('lqaCases'))}건`, 'lqaRuns')}
         {kpi('fqa', '기능 QA', fmt(sum('fqaRuns')), '회', `러너 ${fmt1(sum('runnerH'))}h`, 'fqaRuns')}
@@ -89,15 +88,6 @@ CH.usgOrgF = (v) => { ST.ui.usage.org = v; render(); };
 CH.usgPlan = (v) => { ST.ui.usage.plan = v; render(); };
 ACT.usgMetric = (d) => { ST.ui.usage.metric = d.v; render(); };
 ACT.usgSort = (d) => { ST.ui.usage.sort = d.v; render(); };
-ACT.usgExport = () => {
-  const u = ST.ui.usage; const mo = MONTHS.find((x) => x.key === u.month)!;
-  confirmModal({
-    title: '사용량·사용 금액을 엑셀로 내려받을까요?', icon: 'download',
-    body: <><div className="kv"><span className="k">기준 월</span><span className="v">{`${mo.label} (${mo.note})`}</span><span className="k">대상</span><span className="v">{`${u.org === 'ALL' ? '전체 조직' : orgById(u.org).name} · ${u.plan === 'ALL' ? '전체 플랜' : PLANS[u.plan as PlanKey].label}`}</span><span className="k">시트 구성</span><span className="v">① 조직별 요약(사용량 · 사용 금액) ② 조직 × 모델별 사용 금액 ③ 일별 추이</span><span className="k">파일명</span><span className="v mono">{`proba_usage_${u.month}.xlsx`}</span></div>{notice('내려받기 행위는 감사 로그에 기록됩니다. 진행 중인 달은 내려받는 시점 기준 값입니다.', '')}</>,
-    confirmLabel: '다운로드',
-    onConfirm: () => { addAudit(null, 'EXPORT', '사용량 내보내기', `${mo.label} · ${u.org === 'ALL' ? '전체 조직' : orgById(u.org).name}`, [['파일', '-', `proba_usage_${u.month}.xlsx`]]); toast('엑셀 파일을 만들었습니다. (프로토타입: 실제 파일은 생성되지 않음)'); },
-  });
-};
 
 /* ---------- SA-41 조직 사용량 상세 (드로어) ---------- */
 export function dailySeries(o: Org, mo: MonthDef): number[] {

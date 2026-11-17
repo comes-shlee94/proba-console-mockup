@@ -67,8 +67,7 @@ export function pagePerms(): Page {
     content = [notice(<>메뉴 접근과 별개로 <b>최종 상태를 바꾸는 작업</b>의 수행 권한입니다. 작업 권한이 허용이어도 필요한 메뉴 권한이 없으면 수행할 수 없습니다(빗금 표시).</>, 'info'),
       <div className="tbl-wrap mt12"><table className="tbl"><colgroup><col /><col style={{ width: '220px' }} /><col style={{ width: '220px' }} /></colgroup><thead><tr><th>작업</th><th className="c">QA 엔지니어</th><th className="c">Viewer</th></tr></thead><tbody>{rows}</tbody></table></div>];
   }
-  const s = saved();
-  const acts = <><span className="faint" style={{ fontSize: '12px' }}>{`마지막 저장 ${s.updatedAt} · ${s.updatedBy} · v${s.version}`}</span><button className="btn btn-ghost btn-sm" onClick={act('pmReset')}>{icon('undo', 'sm')}기본값으로 되돌리기</button></>;
+  const acts = <button className="btn btn-ghost btn-sm" onClick={act('pmReset')}>{icon('undo', 'sm')}기본값으로 되돌리기</button>;
   const bar = changes.length ? <div className="savebar">{icon('alert')}<span>저장하지 않은 변경 <span className="n">{`${changes.length}건`}</span> · 저장 즉시 해당 역할의 모든 멤버에게 적용됩니다</span><span className="ml-auto"></span><button className="btn btn-secondary" onClick={act('pmDiscard')}>변경 취소</button><button className="btn btn-accent" onClick={act('pmSave')}>저장</button></div> : null;
   // 원본 DOM 패치는 .content의 자식을 위치 순서로 맞춰 고쳐 그렸음: 의존성 경고(.depwarn)나 저장 바가 생기거나 없어지면 뒤쪽 요소가
   // 앞 자리 요소를 재사용하거나 새로 만들어짐(포커스·스크롤 위치에 영향) → 빈자리 없이 위치 순서를 key로 그려 같은 방식으로 재사용

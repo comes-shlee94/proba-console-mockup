@@ -76,8 +76,7 @@ export function pageModels(): Page {
   const body = (
     <>
       {pageHead('cpu', 'AI 모델', '평가에 사용할 LLM 모델 등록과 단가(Short·Long 구간, 프롬프트 캐시, 단가 일정) 관리')}
-      {notice(<>여기서 <b>활성화</b>한 모델을 각 조직의 조직 관리자가 <b>[조직 관리 › AI 모델]</b>에서 사용할지 선택합니다. 단가는 공급자 단가(USD · 1M 토큰당)이며, 요청마다 <b>그 시각</b>에 적용되는 단가로 사용 금액을 계산합니다(조직 화면의 사용 단가·사용 금액도 같은 값). 공급자의 가격 변경·기간 할인은 모델 수정의 <b>단가 일정</b>에서 등록합니다.</>, 'info')}
-      <div className="filterbar mt12">{sel('pv', [['ALL', '전체 공급자'], ...PROVIDERS.map((p): SelOpt => [p, p])], u.provider, { onChange: ch('mdProv'), 'aria-label': '공급자' })}
+      <div className="filterbar">{sel('pv', [['ALL', '전체 공급자'], ...PROVIDERS.map((p): SelOpt => [p, p])], u.provider, { onChange: ch('mdProv'), 'aria-label': '공급자' })}
         <div className="vsep"></div><div className="search">{icon('search')}<Input id="q-models" className="input" placeholder="모델 ID·이름으로 검색" value={u.q} onValue={inp('mdQ')} /></div><button className="btn btn-primary" onClick={act('mdCreate')}>{icon('plus')}모델 등록</button></div>
       <div className="tbl-meta">전체 <b>{list.length}</b>{`개 · 활성 ${ST.models.filter((m) => m.active).length}개`}<span className="ml-auto faint">현재 적용 단가: USD · 1M 토큰당 · <span className="tier">S</span>Short <span className="tier long">L</span>Long 구간 · 캐시 '없음'은 일반 입력 단가 적용</span></div>
       <div className="tbl-wrap"><table className="tbl"><colgroup><col style={{ width: '19%' }} /><col style={{ width: '8%' }} /><col style={{ width: '22%' }} /><col style={{ width: '18%' }} /><col style={{ width: '10%' }} /><col style={{ width: '11%' }} /><col style={{ width: '62px' }} /><col style={{ width: '52px' }} /></colgroup>

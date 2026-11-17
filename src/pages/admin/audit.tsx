@@ -1,10 +1,10 @@
 /* ---------- SA-50 감사 로그 ---------- */
 import type { ReactNode } from 'react';
-import type { AuditCat, AuditEntry, RangeFilter } from '../../types';
+import type { AuditEntry, RangeFilter } from '../../types';
 import { AUDIT_CATS } from '../../data';
 import {
-  ACT, CH, IN, ST, Check, Input, act, addAudit, badge, ch, closeOverlay, icon, inp, notice, openOverlay, orgById, ovs,
-  pageHead, pageSizeSel, pager, paginate, refreshOverlay, render, roleOfActor, sel, toast,
+  ACT, CH, IN, ST, Input, act, badge, ch, icon, inp, notice, openOverlay, orgById,
+  pageHead, pageSizeSel, pager, paginate, render, roleOfActor, sel,
   type Page, type SelOpt,
 } from '../../core';
 
@@ -12,9 +12,9 @@ import {
 // 로그 보존(v0.8): 총 1년 — 화면 조회 범위가 지난 로그는 보관 저장소(아카이브)로 옮겨 보관한 뒤, 기록일로부터 1년이 지나면 파기
 // v0.10: 조회 범위 전체를 볼 수 있도록 기간 버튼 추가 · 직접 입력의 '최대 90일' 한도 삭제(내보내기 31일 한도는 유지)
 // v0.11: [오늘] 삭제 · 기간 표기를 일 단위로 통일('최근 6개월' → '최근 180일'). 화면 맨 아래 안내 문구만 '최근 6개월'로 표기
+// v0.15: 내보내기(Excel·CSV) 기능 삭제
 export const AUDIT_TODAY = '2026-11-11'; export const AUDIT_MIN = '2026-05-16'; // 화면 조회 범위: 최근 180일(오늘 포함)
 export const RANGES: Record<string, [string, string | null]> = { '7d': ['최근 7일', '2026-11-05'], '30d': ['최근 30일', '2026-10-13'], '90d': ['최근 90일', '2026-08-14'], '180d': ['최근 180일', AUDIT_MIN], custom: ['직접 입력', null] };
-const EXPORT_MAX_DAYS = 31;
 const dayDiff = (a: string, b: string) => Math.round((new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()) / 86400000);
 const rangeOf = (f: RangeFilter): [string, string] => (f.range === 'custom' ? [f.from, f.to] : [RANGES[f.range][1] as string, AUDIT_TODAY]);
 const rangeDays = (f: RangeFilter) => { const [a, b] = rangeOf(f); return dayDiff(a, b) + 1; };
@@ -81,7 +81,7 @@ export function pageAudit(): Page {
       <div className="filterbar">{sel('o', [['ALL', '전체 조직'], ['PLATFORM', '플랫폼(조직 없음)'], ...ST.orgs.map((o): SelOpt => [o.id, o.name])], f.org, { onChange: ch('auOrg'), 'aria-label': '조직' })}
         {sel('c', [['ALL', '전체 분류'], ...Object.entries(AUDIT_CATS)], f.cat, { onChange: ch('auCat'), 'aria-label': '분류' })}
         {sel('r', [['ALL', '전체 결과'], ['SUCCESS', '성공'], ['FAILURE', '실패']], f.result, { onChange: ch('auRes'), 'aria-label': '결과' })}<div className="vsep"></div>
-        <div className="search">{icon('search')}<Input id="q-audit" className="input" placeholder="행위자 이름·이메일, 행위, 대상으로 검색" value={f.q} onValue={inp('auQ')} /></div><button className="btn btn-secondary" onClick={act('auExport')}>{icon('download', 'sm')}내보내기</button></div>
+        <div className="search">{icon('search')}<Input id="q-audit" className="input" placeholder="행위자 이름·이메일, 행위, 대상으로 검색" value={f.q} onValue={inp('auQ')} /></div></div>
       <div className="tbl-meta">전체 <b>{list.length}</b>{`건 · ${rangeLabel(f)} · 최신순${f.org !== 'ALL' || f.cat !== 'ALL' || f.result !== 'ALL' || f.q ? ' · ' : ''}`}{f.org !== 'ALL' || f.cat !== 'ALL' || f.result !== 'ALL' || f.q ? <button className="link" onClick={act('auReset')}>필터 초기화</button> : null}<span className="ml-auto faint">행을 누르면 변경 전·후 값과 접속 정보를 볼 수 있습니다</span>{pageSizeSel('audit', size)}</div>
       {auditTable(view)}{pager(list.length, f.page, size, 'audit')}
       <div className="mt12">{notice(<>감사 로그는 <b>추가만 가능(append-only)</b>하며 화면 어디에서도 수정·삭제할 수 없습니다. <b>보존 기간 총 1년</b>: 화면에서는 최근 6개월까지 조회할 수 있고, 6개월이 지난 로그는 보관 저장소(아카이브)로 옮겨 6개월 더 보관한 뒤 파기합니다(보관분은 요청 시 운영팀이 추출). 비밀번호·시크릿 값은 기록하지 않거나 마스킹합니다.</>, '')}</div>
@@ -97,28 +97,6 @@ CH.auCat = (v) => { ST.ui.audit.cat = v; ST.ui.audit.page = 1; render(); };
 CH.auRes = (v) => { ST.ui.audit.result = v; ST.ui.audit.page = 1; render(); };
 IN.auQ = (v) => { ST.ui.audit.q = v; ST.ui.audit.page = 1; render(); };
 ACT.auReset = () => { Object.assign(ST.ui.audit, { org: 'ALL', cat: 'ALL', result: 'ALL', q: '', page: 1 }); render(); };
-/** 감사 로그 내보내기 모달 상태 */
-interface AuExportState { fmt: string }
-ACT.auExport = () => {
-  const f = ST.ui.audit; const n = filterAudit(f).length; const [a, b] = rangeOf(f); const days = rangeDays(f); const over = days > EXPORT_MAX_DAYS;
-  openOverlay<AuExportState>({
-    state: { fmt: 'xlsx' },
-    view: (s: AuExportState) => ({
-      title: '감사 로그 내보내기', icon: 'download',
-      body: (
-        <>
-          <div className="kv"><span className="k">조회 기간</span><span className="v">{`${a} ~ ${b} `}<span className="muted">{`(${days}일${f.range !== 'custom' ? ` · ${RANGES[f.range][0]}` : ''})`}</span></span><span className="k">조회 조건</span><span className="v">{`${f.org === 'ALL' ? '전체 조직' : f.org === 'PLATFORM' ? '플랫폼' : orgById(f.org).name} · ${f.cat === 'ALL' ? '전체 분류' : AUDIT_CATS[f.cat as AuditCat]}`}</span><span className="k">대상 건수</span><span className="v">{`${n}건`}</span></div>
-          <div className="row" style={{ gap: '16px' }}><label className="radio"><Check type="radio" name="rg-aeFmt" checked={s.fmt === 'xlsx'} onClick={act('aeFmt', { v: 'xlsx' })} />Excel (.xlsx)</label><label className="radio"><Check type="radio" name="rg-aeFmt" checked={s.fmt === 'csv'} onClick={act('aeFmt', { v: 'csv' })} />CSV (UTF-8)</label></div>
-          {over ? notice(`조회 기간(${days}일)이 내보내기 한도(${EXPORT_MAX_DAYS}일)를 넘습니다. [직접 입력]으로 기간을 ${EXPORT_MAX_DAYS}일 이내로 줄인 뒤 내보내세요.`, 'danger', 'alert') : null}
-          {notice(<>한 번에 최대 <b>{`${EXPORT_MAX_DAYS}일 · 50,000건`}</b>까지 내보낼 수 있습니다. 내보내기 행위 자체도 감사 로그에 기록되며, 파일에는 변경 전·후 값이 마스킹된 상태로 포함됩니다.</>, '')}
-        </>
-      ),
-      foot: <><button className="btn btn-secondary" onClick={act('closeOv')}>취소</button><button className="btn btn-primary" onClick={act('aeGo')} disabled={over}>내보내기</button></>,
-    }),
-  });
-};
-ACT.aeFmt = (d) => { ovs<AuExportState>().fmt = d.v; refreshOverlay(); };
-ACT.aeGo = () => { const s = ovs<AuExportState>(); const f = ST.ui.audit; const [a, b] = rangeOf(f); closeOverlay(); addAudit(null, 'EXPORT', '감사 로그 내보내기', `${a} ~ ${b} · ${filterAudit(f).length}건`, [['형식', '-', s.fmt.toUpperCase()], ['조회 기간', '-', `${a} ~ ${b} (${rangeDays(f)}일)`]]); render(); toast('내보내기 파일을 만들었습니다. (프로토타입: 실제 파일은 생성되지 않음)'); };
 ACT.openAudit = (d) => {
   const a = ST.audit.find((x) => x.id === d.id)!;
   const diff = (a.changes || []).length ? <table className="diff"><thead><tr><th style={{ width: '34%' }}>항목</th><th>변경 전</th><th>변경 후</th></tr></thead><tbody>{a.changes!.map(([k, b, n], i) => <tr key={i}><td>{k}</td><td className="old">{b}</td><td className="new">{n}</td></tr>)}</tbody></table> : <p className="faint">변경 항목이 없는 이벤트입니다.</p>;
