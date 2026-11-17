@@ -50,15 +50,15 @@ function schedulePanel(m: Model): ReactNode {
     </>
   );
 }
-type MfErr = PriceErr & { modelId?: string; context?: string };
+type MfErr = PriceErr & { modelId?: string; context?: string; maxOutput?: string };
 /** 등록: 단가 입력(tiered · threshold · p) 포함 · 수정(id 있음): 기본 정보만 (단가는 단가 일정에서) */
-interface MfState extends PriceForm { id?: string; provider: string; modelId: string; name: string; context: string; retiresAt: string; active: boolean; err: MfErr }
+interface MfState extends PriceForm { id?: string; provider: string; modelId: string; name: string; context: string; maxOutput: string; retiresAt: string; active: boolean; err: MfErr }
 export function openModelDrawer(m: Model | null | undefined) {
   openOverlay<MfState>({
     drawer: true, width: 720,
     // 수정 상태에는 단가 입력값이 없음 (원본 그대로 — 수정 화면은 단가 입력을 쓰지 않음)
-    state: m ? ({ id: m.id, provider: m.provider, modelId: m.name, name: m.label || '', context: String(m.context || ''), retiresAt: m.retiresAt || '', active: m.active, err: {} } as MfState)
-      : { provider: 'OpenAI', modelId: '', name: '', context: '', retiresAt: '', tiered: false, threshold: '200000', p: { short: emptyP(), long: emptyP() }, active: true, err: {} },
+    state: m ? ({ id: m.id, provider: m.provider, modelId: m.name, name: m.label || '', context: String(m.context || ''), maxOutput: String(m.maxOutput || ''), retiresAt: m.retiresAt || '', active: m.active, err: {} } as MfState)
+      : { provider: 'OpenAI', modelId: '', name: '', context: '', maxOutput: '', retiresAt: '', tiered: false, threshold: '200000', p: { short: emptyP(), long: emptyP() }, active: true, err: {} },
     view: (s: MfState): OverlayView => {
       const md = s.id ? ST.models.find((x) => x.id === s.id) : null;
       const ok = s.modelId.trim() && (md || ((s.tiered ? ['short', 'long'] : ['short']) as TierKey[]).every((t) => s.p[t].in !== '' && s.p[t].out !== ''));
@@ -71,6 +71,7 @@ export function openModelDrawer(m: Model | null | undefined) {
               {field('모델 ID', <Input id="f-mf-id" className="input mono" placeholder="예: gpt-6-luna" value={s.modelId} onValue={inp('mfId')} readOnly={!!md} />, { req: 1, help: md ? '등록 후에는 변경할 수 없습니다(이력 재현성)' : '공급자 API에서 쓰는 모델 식별자 · 공급자 안에서 중복 불가', err: s.err.modelId })}
               {field('표시 이름', <Input id="f-mf-name" className="input" placeholder="미입력 시 모델 ID 사용" value={s.name} onValue={inp('mfName')} />, { help: '조직 화면(AI 모델·Judge·Prompt)에 보이는 이름' })}
               {field('최대 컨텍스트(토큰)', <Input id="f-mf-ctx" className="input num" inputMode="numeric" placeholder="예: 1048576" value={s.context} onValue={inp('mfCtx')} />, { help: s.context ? `화면 표기: ${ctxK(Number(s.context) || 0)}` : '선택 · 공급자 문서의 입력 토큰 한도', err: s.err.context })}
+              {field('최대 출력(토큰)', <Input id="f-mf-out" className="input num" inputMode="numeric" placeholder="예: 65536" value={s.maxOutput} onValue={inp('mfOut')} />, { help: s.maxOutput ? `화면 표기: ${ctxK(Number(s.maxOutput) || 0)}` : '선택 · 공급자 문서의 최대 출력 토큰 수(한 번의 응답 한도)', err: s.err.maxOutput })}
               {field('공급자 지원 종료일', <Input id="f-mf-ret" type="date" className="input" value={s.retiresAt} onValue={inp('mfRetire')} />, { help: '선택 · 공급자가 지원 종료(deprecation)를 공지한 날짜 — 목록과 조직 화면에 표시' })}</div></div>
             <div><p className="sec-t">2. 단가 <span className="faint" style={{ fontWeight: '400' }}>USD · 1M 토큰당 · 공급자 원가</span></p>
               {md ? schedulePanel(md) : <>{tierFields(s, 'mf', 'mfTier', 'mfTh')}<div className="mt8">{priceGridHtml(s, 'mf', 'mfPrice')}</div>
@@ -87,7 +88,10 @@ export function openModelDrawer(m: Model | null | undefined) {
 CH.mfProv = (v) => { ovs<MfState>().provider = v; ovs<MfState>().err.modelId = ''; refreshOverlay(); };
 IN.mfId = (v) => { ovs<MfState>().modelId = v; ovs<MfState>().err.modelId = ''; refreshOverlay(); };
 IN.mfName = (v) => { ovs<MfState>().name = v; };
-IN.mfCtx = (v) => { ovs<MfState>().context = v.replace(/[^\d]/g, ''); ovs<MfState>().err.context = ''; refreshOverlay(); };
+IN.mfCtx = (v) => { ovs<MfState>().context = v.replace(/[^\d]/g, ''); ovs<MfState>().err.context = ''; ovs<MfState>().err.maxOutput = ''; refreshOverlay(); };
+IN.mfOut = (v) => { ovs<MfState>().maxOutput = v.replace(/[^\d]/g, ''); ovs<MfState>().err.maxOutput = ''; refreshOverlay(); };
+// 최대 출력은 최대 컨텍스트보다 클 수 없음(둘 다 입력했을 때만 검사) — v0.16
+const outErr = (ctx: number | null, out: number | null) => (ctx && out && out > ctx ? '최대 출력은 최대 컨텍스트보다 클 수 없습니다.' : '');
 IN.mfRetire = (v) => { ovs<MfState>().retiresAt = v; };
 IN.mfTh = (v) => { ovs<MfState>().threshold = v.replace(/[^\d]/g, ''); ovs<MfState>().err.threshold = ''; refreshOverlay(); };
 // 원본 el.dataset.t / el.dataset.k → inp('mfPrice', { t, k })로 넘긴 데이터 d.t / d.k
@@ -99,12 +103,14 @@ ACT.mfSave = () => {
   if (s.id) { // 수정: 기본 정보만 저장 (단가는 단가 일정에서)
     const m = ST.models.find((x) => x.id === s.id) as ModelRec; const chg: Change[] = [];
     const label = s.name.trim() && s.name.trim() !== m.name ? s.name.trim() : '';
-    const ctx = Number(s.context) || null;
+    const ctx = Number(s.context) || null; const out = Number(s.maxOutput) || null;
     if (ctx && m.tiered && ctx <= (m.threshold as number)) { s.err = { context: '최대 컨텍스트는 Long 구간 기준보다 커야 합니다.' }; refreshOverlay(); return; }
+    if (outErr(ctx, out)) { s.err = { maxOutput: outErr(ctx, out) }; refreshOverlay(); return; }
     if ((m.label || '') !== label) chg.push(['표시 이름', m.label || '-', label || '-']);
     if ((m.context || null) !== ctx) chg.push(['최대 컨텍스트', m.context ? fmt(m.context) : '-', ctx ? fmt(ctx) : '-']);
+    if ((m.maxOutput || null) !== out) chg.push(['최대 출력', m.maxOutput ? fmt(m.maxOutput) : '-', out ? fmt(out) : '-']);
     if ((m.retiresAt || '') !== (s.retiresAt || '')) chg.push(['공급자 지원 종료일', m.retiresAt || '-', s.retiresAt || '-']);
-    Object.assign(m, { label, context: ctx, retiresAt: s.retiresAt || null });
+    Object.assign(m, { label, context: ctx, maxOutput: out, retiresAt: s.retiresAt || null });
     if (chg.length) addAudit(null, 'MODEL', '모델 정보 수정', m.name, chg);
     const deact = m.active && !s.active;
     if (!m.active && s.active) { m.active = true; m.deactivatedAt = null; addAudit(null, 'MODEL', '모델 활성화', m.name, [['활성', '아니오', '예']]); }
@@ -115,9 +121,10 @@ ACT.mfSave = () => {
   const err: MfErr = validatePrices(s);
   if (ST.models.some((x) => x.provider === s.provider && x.name === modelId)) err.modelId = '같은 공급자에 이미 등록된 모델 ID입니다.';
   if (s.context && s.tiered && Number(s.context) <= Number(s.threshold)) err.context = '최대 컨텍스트는 Long 구간 기준보다 커야 합니다.';
+  if (outErr(Number(s.context) || null, Number(s.maxOutput) || null)) err.maxOutput = outErr(Number(s.context) || null, Number(s.maxOutput) || null);
   if (hasErr(err)) { s.err = err; refreshOverlay(); return; }
   const price = buildPrice(s);
-  const m: Omit<ModelRec, 'tiered' | 'threshold' | 'price'> = { id: nextId(ST.models, 'MDL-'), name: modelId, label: s.name.trim() && s.name.trim() !== modelId ? s.name.trim() : '', provider: s.provider, context: Number(s.context) || null, active: s.active, isDefault: false, activePlans: 0, schedules: 0, createdAt: '2026-11-11', hasHistory: false, retiresAt: s.retiresAt || null,
+  const m: Omit<ModelRec, 'tiered' | 'threshold' | 'price'> = { id: nextId(ST.models, 'MDL-'), name: modelId, label: s.name.trim() && s.name.trim() !== modelId ? s.name.trim() : '', provider: s.provider, context: Number(s.context) || null, maxOutput: Number(s.maxOutput) || null, active: s.active, isDefault: false, activePlans: 0, schedules: 0, createdAt: '2026-11-11', hasHistory: false, retiresAt: s.retiresAt || null,
     versions: [{ id: 'PV-' + (++PV_SEQ), from: NOW_KEY, tiered: s.tiered, threshold: s.tiered ? Number(s.threshold) : null, price, note: '최초 등록', by: me().name }], promos: [] };
   syncModel(m as Model); ST.models.push(m as Model);
   addAudit(null, 'MODEL', '모델 등록', modelId, [['공급자', '-', s.provider], ['단가 구간', '-', s.tiered ? `Short·Long (기준 ${ctxK(Number(s.threshold))})` : '단일'], ['입력 · 출력 단가', '-', `${usdp(price.short!.in)} · ${usdp(price.short!.out)}`]]);

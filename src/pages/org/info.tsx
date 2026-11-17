@@ -45,7 +45,7 @@ ACT.oiPlan = () => openPlanModal(orgById(CUR_ORG));
 export function pageOrgTrialLocked(path: string): Page {
   const nav = ORG_NAV.find(([href]) => path === href || path.startsWith(href + '/'));
   const o = orgById(CUR_ORG);
-  return { crumbs: [nav ? nav[1] : '조직 관리'], body: <div className="blank"><span className="bi">{icon('lock', 'lg')}</span><h2>Trial 만료로 정지된 동안에는 조직 정보만 이용할 수 있습니다</h2>
+  return { crumbs: nav ? [nav[1]] : [], body: <div className="blank"><span className="bi">{icon('lock', 'lg')}</span><h2>Trial 만료로 정지된 동안에는 조직 정보만 이용할 수 있습니다</h2>
     <p>{`${o.name}의 Trial이 ${o.trialEndsAt}에 끝나 조직이 정지되었습니다. `}<b>[조직 정보]</b>{`에서 플랜을 Team 또는 Enterprise로 변경하면 ${nav ? `${josa(nav[1], '을/를')} 포함한 ` : ''}모든 메뉴를 바로 다시 이용할 수 있습니다.`}</p>
     <button className="btn btn-primary mt12" onClick={act('nav', { href: '/org/info' })}>{icon('building', 'sm')}조직 정보로 이동</button></div> };
 }

@@ -39,6 +39,7 @@ export function adminShell(path: string) {
   return <div className="shell">{lnb('admin', navPath)}<div className="main">{topbar(['관리자 콘솔', ...page.crumbs])}<div className={`content ${page.cls || ''}`}>{page.body}</div></div></div>;
 }
 
+// v0.16: 브레드크럼에서 조직명 삭제(조직은 왼쪽 메뉴 위 '조직 관리' 영역에 표시)
 export function orgShell(path: string) {
   let page: Page;
   if (path === '/org' || path === '/org/info') page = pageOrgInfo();
@@ -50,5 +51,5 @@ export function orgShell(path: string) {
   else if (path === '/org/activity') page = activityAllowed(orgById(CUR_ORG)) ? pageActivity() : pageActivityLocked();
   else page = pageOrgInfo();
   const navPath = path === '/org' ? '/org/info' : path;
-  return <div className="shell">{lnb('org', navPath)}<div className="main">{topbar(['조직 관리', orgById(CUR_ORG).name, ...page.crumbs])}<div className={`content ${page.cls || ''}`}>{page.body}</div></div></div>;
+  return <div className="shell">{lnb('org', navPath)}<div className="main">{topbar(['조직 관리', ...page.crumbs])}<div className={`content ${page.cls || ''}`}>{page.body}</div></div></div>;
 }

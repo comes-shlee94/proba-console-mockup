@@ -30,6 +30,7 @@ export function pageOrgModels(): Page {
         <td>{m.provider}</td>
         <td className="num">{lines(e.price)}{e.tiered ? <div className="faint" style={{ fontSize: '11px', marginTop: '2px' }}>{`Long: 요청 입력 ${ctxK(e.threshold)} 토큰 초과`}</div> : null}{tags.length ? <div className="ptags">{tags}</div> : null}</td>
         <td className="num" data-tip={`${fmt(m.context)} 토큰`}>{ctxK(m.context)}</td>
+        <td className="num" data-tip={m.maxOutput ? `${fmt(m.maxOutput)} 토큰` : undefined}>{ctxK(m.maxOutput)}</td>
         <td className="num">{plans ? `${plans}건` : <span className="faint">-</span>}</td>
         <td className="c"><button className={`radio-dot ${isDef ? 'on' : ''}`} disabled={!on || !m.active} onClick={act('omDefault', { v: m.name })} aria-label={`${m.name} 조직 기본 모델로 지정`} data-tip={!on ? '사용 중인 모델만 기본으로 지정할 수 있습니다' : isDef ? '현재 조직 기본 모델' : '조직 기본 모델로 지정'}></button></td>
         <td className="c"><button className={`switch ${on ? 'on' : ''}`} disabled={!m.active} onClick={act('omToggle', { v: m.name })} aria-label={`${m.name} 사용`} aria-pressed={String(on) as 'true' | 'false'}></button></td>
@@ -40,8 +41,8 @@ export function pageOrgModels(): Page {
     <>
       {pageHead('cpu', 'AI 모델', '사용할 LLM 모델과 조직 기본 모델 설정')}
       <div className="tbl-meta">사용 중 <b>{set.on.filter((n) => modelByName(n)?.active).length}</b>{`개 · 전체 ${list.length}개`}<span className="ml-auto faint">사용 모델은 최소 1개 · 기본 모델은 끌 수 없습니다(먼저 다른 모델을 기본으로 지정) · 단가: USD · 1M 토큰당</span></div>
-      <div className="tbl-wrap"><table className="tbl"><colgroup><col style={{ width: '24%' }} /><col style={{ width: '9%' }} /><col style={{ width: '29%' }} /><col style={{ width: '10%' }} /><col style={{ width: '10%' }} /><col style={{ width: '84px' }} /><col style={{ width: '72px' }} /></colgroup>
-        <thead><tr><th>모델</th><th>공급자</th><th>사용 단가 (1M 토큰당)</th><th>최대 컨텍스트</th><th>사용 중인 평가 계획</th><th className="c">기본 모델</th><th className="c">사용</th></tr></thead><tbody>{rows}</tbody></table></div>
+      <div className="tbl-wrap"><table className="tbl"><colgroup><col style={{ width: '22%' }} /><col style={{ width: '9%' }} /><col style={{ width: '27%' }} /><col style={{ width: '10%' }} /><col style={{ width: '8%' }} /><col style={{ width: '10%' }} /><col style={{ width: '84px' }} /><col style={{ width: '72px' }} /></colgroup>
+        <thead><tr><th>모델</th><th>공급자</th><th>사용 단가 (1M 토큰당)</th><th>최대 컨텍스트</th><th>최대 출력</th><th>사용 중인 평가 계획</th><th className="c">기본 모델</th><th className="c">사용</th></tr></thead><tbody>{rows}</tbody></table></div>
       <div className="mt12">{notice('모델 사용을 끄면 그 모델을 쓰는 평가 계획은 조직 기본 모델로 바뀝니다(다음 실행부터). 이미 끝난 실행 결과에는 영향이 없습니다. 단가는 요청 시각 기준으로 적용되며, 공급자의 가격 변경·기간 할인이 있으면 해당 기간의 사용분에 그대로 반영됩니다.', '')}</div>
     </>
   );

@@ -1,7 +1,7 @@
 {
   "name": "proba-console-mockup",
   "private": true,
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "PROBA 관리자 콘솔·조직 관리 프로토타입 (React + TypeScript)",
   "type": "module",
   "scripts": {

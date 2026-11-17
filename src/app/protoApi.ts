@@ -47,7 +47,7 @@ export function installProtoApi() {
         userMenuOf: () => { const b = document.querySelector<HTMLElement>(`[data-act="usrRowMenu"][data-id="${arg}"]`)!; ACT.usrRowMenu({ id: arg }, b); },
         saDeactivate: () => { openSaDeactivate(acct(arg)); ovs().reason = '장기 출장 (2026-11-16 ~ 12-31)'; refreshOverlay(); },
         // 등록 예시: Google 가격표의 Gemini 2.5 Pro (200K 토큰 초과 시 Long 단가)
-        modelDrawer: () => { openModelDrawer(null); Object.assign(ovs(), { provider: 'Google', modelId: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', context: '1048576', tiered: true, threshold: '200000', p: { short: { in: '1.25', out: '10.00', cw: '', cr: '0.125' }, long: { in: '2.50', out: '15.00', cw: '', cr: '0.25' } } }); refreshOverlay(); },
+        modelDrawer: () => { openModelDrawer(null); Object.assign(ovs(), { provider: 'Google', modelId: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', context: '1048576', maxOutput: '65536', tiered: true, threshold: '200000', p: { short: { in: '1.25', out: '10.00', cw: '', cr: '0.125' }, long: { in: '2.50', out: '15.00', cw: '', cr: '0.25' } } }); refreshOverlay(); },
         modelEdit: () => openModelDrawer(ST.models.find((m) => m.name === arg)),
         priceChange: () => { const m = modelByName(arg.model)!; openModelDrawer(m); openPriceChange(m); Object.assign(ovs(), arg.state || {}); refreshOverlay(); },
         promoAdd: () => { const m = modelByName(arg.model)!; openModelDrawer(m); openPromoAdd(m); Object.assign(ovs(), arg.state || {}); refreshOverlay(); },

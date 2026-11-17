@@ -67,6 +67,7 @@ export function pageModels(): Page {
         <td className="num">{priceLines(ep, [['in', '입력'], ['out', '출력']], usdp)}{tags.length ? <div className="ptags">{tags}</div> : null}</td>
         <td className="num">{priceLines(ep, [['cw', '쓰기'], ['cr', '읽기']], usdp)}</td>
         <td className="num" data-tip={`${fmt(m.context)} 토큰`}><div className="two"><span className="p" style={{ fontWeight: '400' }}>{ctxK(m.context)}</span><span className="s">{e.tiered ? `Long: ${ctxK(e.threshold)} 초과` : '단일 단가'}</span></div></td>
+        <td className="num" data-tip={m.maxOutput ? `${fmt(m.maxOutput)} 토큰` : undefined}>{ctxK(m.maxOutput)}</td>
         <td className="num"><div className="two"><span className="p" style={{ fontWeight: '400' }}>{`조직 ${used}곳${defs ? ' ' : ''}`}{defs ? <span className="faint">{`(기본 ${defs})`}</span> : null}</span><span className="s">{`활성 계획 ${m.activePlans}건`}</span></div></td>
         <td className="c"><button className={`switch ${m.active ? 'on' : ''}`} onClick={act('mdToggle', { id: m.id })} aria-label={`${m.name} 활성화`} aria-pressed={String(m.active) as 'true' | 'false'}></button></td>
         <td className="c"><button className="icon-btn" onClick={act('mdMenu', { id: m.id })} aria-label={`${m.name} 관리`}>{icon('more')}</button></td>
@@ -79,9 +80,9 @@ export function pageModels(): Page {
       <div className="filterbar">{sel('pv', [['ALL', '전체 공급자'], ...PROVIDERS.map((p): SelOpt => [p, p])], u.provider, { onChange: ch('mdProv'), 'aria-label': '공급자' })}
         <div className="vsep"></div><div className="search">{icon('search')}<Input id="q-models" className="input" placeholder="모델 ID·이름으로 검색" value={u.q} onValue={inp('mdQ')} /></div><button className="btn btn-primary" onClick={act('mdCreate')}>{icon('plus')}모델 등록</button></div>
       <div className="tbl-meta">전체 <b>{list.length}</b>{`개 · 활성 ${ST.models.filter((m) => m.active).length}개`}<span className="ml-auto faint">현재 적용 단가: USD · 1M 토큰당 · <span className="tier">S</span>Short <span className="tier long">L</span>Long 구간 · 캐시 '없음'은 일반 입력 단가 적용</span></div>
-      <div className="tbl-wrap"><table className="tbl"><colgroup><col style={{ width: '19%' }} /><col style={{ width: '8%' }} /><col style={{ width: '22%' }} /><col style={{ width: '18%' }} /><col style={{ width: '10%' }} /><col style={{ width: '11%' }} /><col style={{ width: '62px' }} /><col style={{ width: '52px' }} /></colgroup>
-        <thead><tr><th>모델</th><th>공급자</th><th>입력 · 출력 단가</th><th>캐시 쓰기 · 읽기 단가</th><th>최대 컨텍스트</th><th>사용 현황</th><th className="c">활성</th><th className="c">관리</th></tr></thead>
-        <tbody>{rows.length ? rows : <tr className="empty"><td colSpan={8}>등록된 모델이 없습니다.</td></tr>}</tbody></table></div>
+      <div className="tbl-wrap"><table className="tbl"><colgroup><col style={{ width: '17.5%' }} /><col style={{ width: '7.5%' }} /><col style={{ width: '20%' }} /><col style={{ width: '16.5%' }} /><col style={{ width: '10%' }} /><col style={{ width: '6.5%' }} /><col style={{ width: '11%' }} /><col style={{ width: '62px' }} /><col style={{ width: '56px' }} /></colgroup>
+        <thead><tr><th>모델</th><th>공급자</th><th>입력 · 출력 단가</th><th>캐시 쓰기 · 읽기 단가</th><th>최대 컨텍스트</th><th>최대 출력</th><th>사용 현황</th><th className="c">활성</th><th className="c">관리</th></tr></thead>
+        <tbody>{rows.length ? rows : <tr className="empty"><td colSpan={9}>등록된 모델이 없습니다.</td></tr>}</tbody></table></div>
     </>
   );
   return { crumbs: ['AI 모델'], body };

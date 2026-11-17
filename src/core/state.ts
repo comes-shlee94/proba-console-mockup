@@ -45,7 +45,7 @@ export function initState() {
       // 감사 로그 직접 입력: from/to = 적용 중인 기간, cFrom/cTo = 입력값(검증 전), cErr = 입력 오류
       audit: { range: '7d', org: 'ALL', cat: 'ALL', result: 'ALL', q: '', page: 1, size: 20, from: '2026-10-12', to: '2026-11-11', cFrom: '2026-10-12', cTo: '2026-11-11', cErr: '' },
       members: { status: 'ALL', role: 'ALL', q: '', page: 1, size: 20 },
-      perm: { tab: 'menus', open: { 'AI 품질': true, '공통': true }, draft: null },
+      perm: { tab: 'menus', open: {}, draft: null }, // v0.16: 메뉴 그룹은 처음에 모두 접힘
       orgUsage: { month: '2026-11' },
       activity: { range: '30d', cat: 'ALL', q: '', page: 1, size: 20, from: '2026-10-12', to: '2026-11-11', cFrom: '2026-10-12', cTo: '2026-11-11', cErr: '' },
     },

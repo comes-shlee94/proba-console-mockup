@@ -124,6 +124,8 @@ export interface Model {
   label: string;
   provider: string;
   context: number | null;
+  /** 최대 출력 토큰(공급자 문서의 출력 한도) · 없으면 null — v0.16 */
+  maxOutput?: number | null;
   active: boolean;
   isDefault: boolean;
   activePlans: number;
