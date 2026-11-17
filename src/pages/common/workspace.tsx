@@ -37,7 +37,7 @@ export function wsShell(content: ReactNode, path: string): ReactNode {
 CH.wsOrg = (v, el) => {
   if (v === '__search') { el!.value = ''; toast('서비스 관리자는 조직을 검색해 "지원 접속(조회 전용)"으로 볼 수 있습니다 (제안 · 감사 로그 기록 · 조직 소속은 생기지 않음).', 'info'); return; }
   if (!v || v === CUR_ORG) return;
-  ST.curOrg[ST.persona] = v; ST.ui.members.page = 1; ST.ui.activity.page = 1; closeMenu(); render();
+  ST.curOrg[ST.persona] = v; ST.ui.members.page = 1; ST.ui.activity.page = 1; ST.ui.orgModels.page = 1; closeMenu(); render();
   const mm = memOf(v, me().id)!;
   toast(`${orgById(v).name} 조직으로 전환했습니다 · 이 조직에서의 역할: ${ROLES[mm.role]}${mm.role === 'ORG_ADMIN' ? ' (사용자 메뉴에 조직 관리 표시)' : ''}`, 'info');
 };

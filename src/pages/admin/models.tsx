@@ -7,7 +7,7 @@ import type { Change, Model, PriceKey, Promo, TierKey, TierPrice } from '../../t
 import { PROVIDERS, effPrice, nextPromo, nextVersion } from '../../data';
 import {
   ACT, CH, IN, OV, ST, Check, Input, act, addAudit, ch, confirmModal, ctxK, fmt, icon, inp, josa, notice,
-  openMenu, openOverlay, orgById, ovs, pageHead, refreshOverlay, render, renderOverlays, sel, toast, usdp,
+  openMenu, openOverlay, orgById, ovs, pageHead, pageSizeSel, pager, paginate, refreshOverlay, render, renderOverlays, sel, toast, usdp,
   type Page, type SelOpt,
 } from '../../core';
 import { openModelDrawer } from './modelDrawer';
@@ -56,7 +56,8 @@ export function pageModels(): Page {
   const u = ST.ui.models;
   const q = u.q.trim().toLowerCase();
   const list = ST.models.filter((m) => (u.provider === 'ALL' || m.provider === u.provider) && (!q || m.name.toLowerCase().includes(q) || (m.label || '').toLowerCase().includes(q)));
-  const rows = list.map((m, i) => {
+  const pg = paginate(list, u); const filtered = u.provider !== 'ALL' || !!q; // v0.18: 페이지네이션 · 개수는 검색·필터 결과 기준
+  const rows = pg.view.map((m, i) => {
     const used = orgsUsing(m.name).length; const defs = orgsDefault(m.name).length;
     const e = effPrice(m); const ep = { tiered: e.tiered, price: e.price }; const tags = priceTags(m);
     return (
@@ -79,16 +80,18 @@ export function pageModels(): Page {
       {pageHead('cpu', 'AI 모델', '평가에 사용할 LLM 모델 등록과 단가(Short·Long 구간, 프롬프트 캐시, 단가 일정) 관리')}
       <div className="filterbar">{sel('pv', [['ALL', '전체 공급자'], ...PROVIDERS.map((p): SelOpt => [p, p])], u.provider, { onChange: ch('mdProv'), 'aria-label': '공급자' })}
         <div className="vsep"></div><div className="search">{icon('search')}<Input id="q-models" className="input" placeholder="모델 ID·이름으로 검색" value={u.q} onValue={inp('mdQ')} /></div><button className="btn btn-primary" onClick={act('mdCreate')}>{icon('plus')}모델 등록</button></div>
-      <div className="tbl-meta">전체 <b>{list.length}</b>{`개 · 활성 ${ST.models.filter((m) => m.active).length}개`}<span className="ml-auto faint">현재 적용 단가: USD · 1M 토큰당 · <span className="tier">S</span>Short <span className="tier long">L</span>Long 구간 · 캐시 '없음'은 일반 입력 단가 적용</span></div>
+      <div className="tbl-meta">전체 <b>{list.length}</b>{`개 · 활성 ${list.filter((m) => m.active).length}개`}<span className="ml-auto faint">현재 적용 단가: USD · 1M 토큰당 · <span className="tier">S</span>Short <span className="tier long">L</span>Long 구간 · 캐시 '없음'은 일반 입력 단가 적용</span>{pageSizeSel('models', pg.size)}</div>
       <div className="tbl-wrap"><table className="tbl"><colgroup><col style={{ width: '17.5%' }} /><col style={{ width: '7.5%' }} /><col style={{ width: '20%' }} /><col style={{ width: '16.5%' }} /><col style={{ width: '10%' }} /><col style={{ width: '6.5%' }} /><col style={{ width: '11%' }} /><col style={{ width: '62px' }} /><col style={{ width: '56px' }} /></colgroup>
         <thead><tr><th>모델</th><th>공급자</th><th>입력 · 출력 단가</th><th>캐시 쓰기 · 읽기 단가</th><th>최대 컨텍스트</th><th>최대 출력</th><th>사용 현황</th><th className="c">활성</th><th className="c">관리</th></tr></thead>
-        <tbody>{rows.length ? rows : <tr className="empty"><td colSpan={9}>등록된 모델이 없습니다.</td></tr>}</tbody></table></div>
+        <tbody>{rows.length ? rows : filtered ? <tr className="empty"><td colSpan={9}>검색 결과가 없습니다.<br /><button className="link mt8" onClick={act('mdReset')}>필터 초기화</button></td></tr> : <tr className="empty"><td colSpan={9}>등록된 모델이 없습니다.</td></tr>}</tbody></table></div>
+      {pager(list.length, u.page, pg.size, 'models')}
     </>
   );
   return { crumbs: ['AI 모델'], body };
 }
-CH.mdProv = (v) => { ST.ui.models.provider = v; render(); };
-IN.mdQ = (v) => { ST.ui.models.q = v; render(); };
+CH.mdProv = (v) => { ST.ui.models.provider = v; ST.ui.models.page = 1; render(); };
+IN.mdQ = (v) => { ST.ui.models.q = v; ST.ui.models.page = 1; render(); };
+ACT.mdReset = () => { Object.assign(ST.ui.models, { provider: 'ALL', q: '', page: 1 }); render(); };
 ACT.mdToggle = (d) => {
   const m = ST.models.find((x) => x.id === d.id)!;
   if (!m.active) { m.active = true; (m as { deactivatedAt?: string | null }).deactivatedAt = null; addAudit(null, 'MODEL', '모델 활성화', m.name, [['활성', '아니오', '예']]); render(); toast(`${josa(m.name, '을/를')} 활성화했습니다. 조직 관리자가 사용 여부를 선택할 수 있습니다.`); return; }

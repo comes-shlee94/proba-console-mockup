@@ -240,12 +240,14 @@ export interface UiState {
   orgs: { status: string; plan: string; q: string; attn: string | null; page: number; size: number };
   orgDetail: { tab: string };
   users: { status: string; org: string; role: string; q: string; page: number; size: number };
-  models: { provider: string; q: string };
+  models: { provider: string; q: string; page: number; size: number };
   usage: { month: string; org: string; plan: string; metric: string; sort: string };
   audit: RangeFilter & { org: string; cat: string; result: string; q: string; page: number; size: number };
   members: { status: string; role: string; q: string; page: number; size: number };
   perm: { tab: string; open: Record<string, boolean>; draft: PermDraft | null };
   orgUsage: { month: string };
+  /** v0.18: 조직 AI 모델(OA-40) 검색·공급자·페이지 */
+  orgModels: { provider: string; q: string; page: number; size: number };
   activity: RangeFilter & { cat: string; q: string; page: number; size: number };
 }
 

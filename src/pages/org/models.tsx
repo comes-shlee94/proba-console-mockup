@@ -2,15 +2,18 @@
 /* 포팅 메모: 원본에서 한 덩어리 문자열이던 글자는 템플릿 문자열 하나로 그림 — 텍스트 노드가 나뉘면 글자 위치가 미세하게 달라짐 */
 import { Fragment } from 'react';
 import type { Change, TierKey, TierPrice } from '../../types';
-import { effPrice, nextPromo, nextVersion } from '../../data';
-import { ACT, CUR_ORG, ST, act, addAudit, confirmModal, ctxK, fmt, icon, josa, notice, orgById, pageHead, render, toast, usdp, type Page } from '../../core';
+import { PROVIDERS, effPrice, nextPromo, nextVersion } from '../../data';
+import { ACT, CH, CUR_ORG, IN, Input, ST, act, addAudit, ch, confirmModal, ctxK, fmt, icon, inp, josa, notice, orgById, pageHead, pageSizeSel, pager, paginate, render, sel, toast, usdp, type Page, type SelOpt } from '../../core';
 import { modelByName, serviceDefault } from '../admin/models';
 
 const orgModelSet = () => ST.orgModels[CUR_ORG!] || (ST.orgModels[CUR_ORG!] = { on: [serviceDefault()!.name], def: serviceDefault()!.name, plans: {} });
 export function pageOrgModels(): Page {
-  const o = orgById(CUR_ORG); const set = orgModelSet();
-  const list = ST.models.filter((m) => m.active || set.on.includes(m.name));
-  const rows = list.map((m, i) => {
+  const o = orgById(CUR_ORG); const set = orgModelSet(); const u = ST.ui.orgModels;
+  // v0.18: 관리자 콘솔 AI 모델처럼 공급자·검색(모델 ID·이름) + 페이지네이션 — 개수는 검색·필터 결과 기준
+  const q = u.q.trim().toLowerCase(); const filtered = u.provider !== 'ALL' || !!q;
+  const list = ST.models.filter((m) => (m.active || set.on.includes(m.name)) && (u.provider === 'ALL' || m.provider === u.provider) && (!q || m.name.toLowerCase().includes(q) || (m.label || '').toLowerCase().includes(q)));
+  const pg = paginate(list, u);
+  const rows = pg.view.map((m, i) => {
     const on = set.on.includes(m.name); const isDef = set.def === m.name; const plans = set.plans[m.name] || 0;
     // 사용 단가 = 지금 적용되는 단가(공급자 단가 · 기간 할인 포함) — 사용 금액 계산에 쓰는 단가와 같음
     const e = effPrice(m); const up = (v: number | null | undefined) => usdp(v);
@@ -40,14 +43,21 @@ export function pageOrgModels(): Page {
   const body = (
     <>
       {pageHead('cpu', 'AI 모델', '사용할 LLM 모델과 조직 기본 모델 설정')}
-      <div className="tbl-meta">사용 중 <b>{set.on.filter((n) => modelByName(n)?.active).length}</b>{`개 · 전체 ${list.length}개`}<span className="ml-auto faint">사용 모델은 최소 1개 · 기본 모델은 끌 수 없습니다(먼저 다른 모델을 기본으로 지정) · 단가: USD · 1M 토큰당</span></div>
+      <div className="filterbar">{sel('pv', [['ALL', '전체 공급자'], ...PROVIDERS.map((p): SelOpt => [p, p])], u.provider, { onChange: ch('omProv'), 'aria-label': '공급자' })}
+        <div className="vsep"></div><div className="search">{icon('search')}<Input id="q-org-models" className="input" placeholder="모델 ID·이름으로 검색" value={u.q} onValue={inp('omQ')} /></div></div>
+      <div className="tbl-meta">사용 중 <b>{list.filter((m) => m.active && set.on.includes(m.name)).length}</b>{`개 · 전체 ${list.length}개`}<span className="ml-auto faint">사용 모델은 최소 1개 · 기본 모델은 끌 수 없습니다(먼저 다른 모델을 기본으로 지정) · 단가: USD · 1M 토큰당</span>{pageSizeSel('orgModels', pg.size)}</div>
       <div className="tbl-wrap"><table className="tbl"><colgroup><col style={{ width: '22%' }} /><col style={{ width: '9%' }} /><col style={{ width: '27%' }} /><col style={{ width: '10%' }} /><col style={{ width: '8%' }} /><col style={{ width: '10%' }} /><col style={{ width: '84px' }} /><col style={{ width: '72px' }} /></colgroup>
-        <thead><tr><th>모델</th><th>공급자</th><th>사용 단가 (1M 토큰당)</th><th>최대 컨텍스트</th><th>최대 출력</th><th>사용 중인 평가 계획</th><th className="c">기본 모델</th><th className="c">사용</th></tr></thead><tbody>{rows}</tbody></table></div>
+        <thead><tr><th>모델</th><th>공급자</th><th>사용 단가 (1M 토큰당)</th><th>최대 컨텍스트</th><th>최대 출력</th><th>사용 중인 평가 계획</th><th className="c">기본 모델</th><th className="c">사용</th></tr></thead>
+        <tbody>{rows.length ? rows : filtered ? <tr className="empty"><td colSpan={8}>검색 결과가 없습니다.<br /><button className="link mt8" onClick={act('omReset')}>필터 초기화</button></td></tr> : <tr className="empty"><td colSpan={8}>사용할 수 있는 모델이 없습니다.</td></tr>}</tbody></table></div>
+      {pager(list.length, u.page, pg.size, 'orgModels')}
       <div className="mt12">{notice('모델 사용을 끄면 그 모델을 쓰는 평가 계획은 조직 기본 모델로 바뀝니다(다음 실행부터). 이미 끝난 실행 결과에는 영향이 없습니다. 단가는 요청 시각 기준으로 적용되며, 공급자의 가격 변경·기간 할인이 있으면 해당 기간의 사용분에 그대로 반영됩니다.', '')}</div>
     </>
   );
   return { crumbs: ['AI 모델'], body };
 }
+CH.omProv = (v) => { ST.ui.orgModels.provider = v; ST.ui.orgModels.page = 1; render(); };
+IN.omQ = (v) => { ST.ui.orgModels.q = v; ST.ui.orgModels.page = 1; render(); };
+ACT.omReset = () => { Object.assign(ST.ui.orgModels, { provider: 'ALL', q: '', page: 1 }); render(); };
 ACT.omToggle = (d) => omToggle(d.v);
 export function omToggle(name: string) {
   const set = orgModelSet(); const m = modelByName(name)!; const on = set.on.includes(name);
